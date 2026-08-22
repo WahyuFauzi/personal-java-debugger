@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>tool.java_debug_launcher</groupId>
+    <artifactId>java-debug-launcher</artifactId>
+    <version>0.53.2</version>
+    <packaging>jar</packaging>
+    <name>java-debug standalone launcher</name>
+    <description>Standalone entrypoint + provider shims for microsoft/java-debug, run as a plain subprocess over stdio.</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.release>17</maven.compiler.release>
+        <java-debug.version>0.53.2</java-debug.version>
+        <!-- assembled runtime layout (mirrors README):
+             build/java-debug/{server-launcher.jar, com.microsoft.java.debug.core-*.jar, lib/*.jar} -->
+        <launcher.dir>${project.basedir}/build/java-debug</launcher.dir>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.microsoft.java</groupId>
+            <artifactId>com.microsoft.java.debug.core</artifactId>
+            <version>${java-debug.version}</version>
+            <!-- resolved from ~/.m2 (installed via ../java-debug's ./mvnw install) -->
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- compile + jar straight into build/java-debug/ so the runtime layout
+             matches what the app expects (server-launcher.jar + core jar + lib/*.jar) -->
+        <directory>${launcher.dir}</directory>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+                <configuration>
+                    <finalName>server-launcher</finalName>
+                    <archive>
+                        <manifest>
+                            <mainClass>tool.java_debug_launcher.ServerLauncher</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <!-- core's transitive deps -> build/java-debug/lib/ -->
+                    <execution>
+                        <id>copy-deps</id>
+                        <phase>package</phase>
+                        <goals><goal>copy-dependencies</goal></goals>
+                        <configuration>
+                            <outputDirectory>${launcher.dir}/lib</outputDirectory>
+                            <includeScope>runtime</includeScope>
+                        </configuration>
+                    </execution>
+                    <!-- core jar -> build/java-debug/com.microsoft.java.debug.core-0.53.2.jar -->
+                    <execution>
+                        <id>copy-core-jar</id>
+                        <phase>package</phase>
+                        <goals><goal>copy</goal></goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>com.microsoft.java</groupId>
+                                    <artifactId>com.microsoft.java.debug.core</artifactId>
+                                    <version>${java-debug.version}</version>
+                                </artifactItem>
+                            </artifactItems>
+                            <outputDirectory>${launcher.dir}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
