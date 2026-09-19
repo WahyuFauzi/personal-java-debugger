@@ -35,6 +35,7 @@ bin/
 **/lib/
 
 .nvim/
+com.neozpir.jdl/build/
 
 jdt-language-server-latest.tar.gz
 jdtls/

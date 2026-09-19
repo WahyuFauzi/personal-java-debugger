@@ -57,12 +57,35 @@ public class SimpleSourceLookUpProvider implements ISourceLookUpProvider {
     }
 
     private String deriveClassName(String uri) {
-        String path = uri;
-        int slash = path.lastIndexOf('/');
-        String base = slash >= 0 ? path.substring(slash + 1) : path;
-        if (base.endsWith(".java")) {
-            base = base.substring(0, base.length() - ".java".length());
+        String simpleName = simpleClassName(uri);
+        String packageName = parsePackage(getSourceContents(uri));
+        return packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
+    }
+
+    private static String simpleClassName(String uri) {
+        if (uri == null || uri.isEmpty()) {
+            return "";
         }
-        return base;
+        int slash = Math.max(uri.lastIndexOf('/'), uri.lastIndexOf('\\'));
+        String name = slash >= 0 ? uri.substring(slash + 1) : uri;
+        if (name.endsWith(".java")) {
+            name = name.substring(0, name.length() - ".java".length());
+        }
+        return name;
+    }
+
+    private static String parsePackage(String sourceContents) {
+        if (sourceContents == null || sourceContents.isEmpty()) {
+            return "";
+        }
+        for (String line : sourceContents.split("\\R")) {
+            String trimmed = line.trim();
+            if (trimmed.startsWith("package ")) {
+                return trimmed.substring("package ".length())
+                        .replaceFirst(";.*$", "")
+                        .trim();
+            }
+        }
+        return "";
     }
 }

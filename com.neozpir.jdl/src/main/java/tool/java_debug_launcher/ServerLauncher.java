@@ -3,7 +3,6 @@ package tool.java_debug_launcher;
 import com.microsoft.java.debug.core.adapter.ICompletionsProvider;
 import com.microsoft.java.debug.core.adapter.IEvaluationProvider;
 import com.microsoft.java.debug.core.adapter.IHotCodeReplaceProvider;
-import com.microsoft.java.debug.core.adapter.IProviderContext;
 import com.microsoft.java.debug.core.adapter.ISourceLookUpProvider;
 import com.microsoft.java.debug.core.adapter.IVirtualMachineManagerProvider;
 import com.microsoft.java.debug.core.adapter.ProtocolServer;
@@ -21,4 +20,3 @@ public class ServerLauncher {
         server.run();
     }
 }
-
