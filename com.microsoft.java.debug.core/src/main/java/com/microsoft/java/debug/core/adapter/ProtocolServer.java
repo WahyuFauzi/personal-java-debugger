@@ -25,6 +25,7 @@ import com.microsoft.java.debug.core.UsageDataSession;
 import com.microsoft.java.debug.core.protocol.AbstractProtocolServer;
 import com.microsoft.java.debug.core.protocol.Events.DebugEvent;
 import com.microsoft.java.debug.core.protocol.Events.StoppedEvent;
+import com.microsoft.java.debug.core.protocol.Events.TelemetryEvent;
 import com.microsoft.java.debug.core.protocol.Messages;
 import com.sun.jdi.VMDisconnectedException;
 
@@ -33,6 +34,8 @@ public class ProtocolServer extends AbstractProtocolServer {
 
     private IDebugAdapter debugAdapter;
     private UsageDataSession usageDataSession = new UsageDataSession();
+    private boolean telemetryEnabled = false;
+
 
     private Object lock = new Object();
     private boolean isDispatchingRequest = false;
@@ -67,14 +70,35 @@ public class ProtocolServer extends AbstractProtocolServer {
     }
 
     /**
+     * Constructs a protocol server instance based on the given input stream and output stream.
+     * @param input
+     *              the input stream
+     * @param output
+     *              the output stream
+     * @param context
+     *              provider context for a series of provider implementation
+     */
+    public ProtocolServer(InputStream input, OutputStream output, IProviderContext context, boolean enableTelemetry) {
+        super(input, output);
+        debugAdapter = new DebugAdapter(this, context);
+        telemetryEnabled = enableTelemetry;
+    }
+
+    /**
      * A while-loop to parse input data and send output data constantly.
      */
     @Override
     public void run() {
-        usageDataSession.reportStart();
+        if (telemetryEnabled && usageDataSession != null) {
+            usageDataSession.reportStart();
+        }
+
         super.run();
-        usageDataSession.reportStop();
-        usageDataSession.submitUsageData();
+
+        if (telemetryEnabled && usageDataSession != null) {
+            usageDataSession.reportStop();
+            usageDataSession.submitUsageData();
+        }
     }
 
     @Override
