@@ -1,7 +1,10 @@
 package tool.java_debug_launcher;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,10 +48,21 @@ public class SimpleSourceLookUpProvider implements ISourceLookUpProvider {
     @Override
     public String getSourceContents(String uri) {
         try {
-            return new String(Files.readAllBytes(Paths.get(uri)));
-        } catch (IOException e) {
+            return new String(Files.readAllBytes(toPath(uri)));
+        } catch (IOException | InvalidPathException e) {
             return "";
         }
+    }
+
+    /**
+     * DAP clients may send source locations as plain filesystem paths or as
+     * {@code file:} URIs; accept both so the package declaration can be read.
+     */
+    private static Path toPath(String uri) {
+        if (uri != null && uri.startsWith("file:")) {
+            return Paths.get(URI.create(uri));
+        }
+        return Paths.get(uri);
     }
 
     @Override
