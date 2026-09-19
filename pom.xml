@@ -62,6 +62,7 @@
         <module>com.microsoft.java.debug.plugin</module>
         <module>com.microsoft.java.debug.repository</module>
         <module>com.microsoft.java.debug.target</module>
+        <module>com.neozpir.jdl</module>
     </modules>
     <build>
         <pluginManagement>

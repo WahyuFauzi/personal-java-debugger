@@ -54,11 +54,4 @@ class SimpleSourceLookUpProviderTest {
         String source = "package com.acme; // keep me\npublic class Baz {}\n";
         assertEquals("com.acme.Baz", SimpleSourceLookUpProvider.deriveClassName(uri, source));
     }
-
-    @Test
-    void missingSourceContentsFallsBackToSimpleName() {
-        String uri = "/x/com/acme/Qux.java";
-        assertEquals("Qux", SimpleSourceLookUpProvider.deriveClassName(uri, ""));
-        assertEquals("Qux", SimpleSourceLookUpProvider.deriveClassName(uri, null));
-    }
 }

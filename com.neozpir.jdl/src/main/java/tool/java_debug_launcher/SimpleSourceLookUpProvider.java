@@ -19,13 +19,13 @@ public class SimpleSourceLookUpProvider implements ISourceLookUpProvider {
 
     @Override
     public String[] getFullyQualifiedName(String uri, int[] lines, int[] columns) throws DebugException {
-        return new String[] { deriveClassName(uri) };
+        return new String[] { deriveClassName(uri, getSourceContents(uri)) };
     }
 
     @Override
     public JavaBreakpointLocation[] getBreakpointLocations(String sourceUri, SourceBreakpoint[] sourceBreakpoints)
             throws DebugException {
-        String className = deriveClassName(sourceUri);
+        String className = deriveClassName(sourceUri, getSourceContents(sourceUri));
         JavaBreakpointLocation[] locations = new JavaBreakpointLocation[sourceBreakpoints.length];
         for (int i = 0; i < sourceBreakpoints.length; i++) {
             locations[i] = new JavaBreakpointLocation(sourceBreakpoints[i].line, sourceBreakpoints[i].column);
@@ -56,9 +56,9 @@ public class SimpleSourceLookUpProvider implements ISourceLookUpProvider {
         return new ArrayList<>();
     }
 
-    private String deriveClassName(String uri) {
+    static String deriveClassName(String uri, String sourceContents) {
         String simpleName = simpleClassName(uri);
-        String packageName = parsePackage(getSourceContents(uri));
+        String packageName = parsePackage(sourceContents);
         return packageName.isEmpty() ? simpleName : packageName + "." + simpleName;
     }
 
