@@ -54,7 +54,7 @@
                 <executions>
                     <execution>
                         <id>get-libs</id>
-                        <phase>package</phase>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>copy</goal>
                         </goals>
