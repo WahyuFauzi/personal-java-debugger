@@ -25,7 +25,6 @@ import com.microsoft.java.debug.core.UsageDataSession;
 import com.microsoft.java.debug.core.protocol.AbstractProtocolServer;
 import com.microsoft.java.debug.core.protocol.Events.DebugEvent;
 import com.microsoft.java.debug.core.protocol.Events.StoppedEvent;
-import com.microsoft.java.debug.core.protocol.Events.TelemetryEvent;
 import com.microsoft.java.debug.core.protocol.Messages;
 import com.sun.jdi.VMDisconnectedException;
 
@@ -35,7 +34,6 @@ public class ProtocolServer extends AbstractProtocolServer {
     private IDebugAdapter debugAdapter;
     private UsageDataSession usageDataSession = new UsageDataSession();
     private boolean telemetryEnabled = false;
-
 
     private Object lock = new Object();
     private boolean isDispatchingRequest = false;
