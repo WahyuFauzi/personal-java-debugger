@@ -40,12 +40,19 @@ jobs:
           DIST=com.neozpir.jdl/build/java-debug
           test -f "$DIST/server-launcher.jar"
           ls "$DIST"/com.microsoft.java.debug.core-*.jar
+          # ship license/notice files so the published artifact is compliance-ready
+          cp "$GITHUB_WORKSPACE/LICENSE.txt" "$GITHUB_WORKSPACE/ThirdPartyNotices.txt" "$DIST/"
           cd "$DIST"
           zip -r "$GITHUB_WORKSPACE/java-debug-standalone.zip" \
             server-launcher.jar \
             com.microsoft.java.debug.core-*.jar \
-            lib
+            lib \
+            LICENSE.txt \
+            ThirdPartyNotices.txt
           unzip -l "$GITHUB_WORKSPACE/java-debug-standalone.zip"
+          cd "$GITHUB_WORKSPACE"
+          sha256sum java-debug-standalone.zip > java-debug-standalone.zip.sha256
+          cat java-debug-standalone.zip.sha256
 
       - name: Publish release
         env:
@@ -54,10 +61,11 @@ jobs:
           set -euo pipefail
           tag="${GITHUB_REF_NAME}"
           asset="$GITHUB_WORKSPACE/java-debug-standalone.zip"
+          sum="$asset.sha256"
           if gh release view "$tag" >/dev/null 2>&1; then
-            gh release upload "$tag" "$asset" --clobber
+            gh release upload "$tag" "$asset" "$sum" --clobber
           else
-            gh release create "$tag" "$asset" \
+            gh release create "$tag" "$asset" "$sum" \
               --title "java-debug standalone $tag" \
               --generate-notes
           fi
