@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish standalone bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache local Maven repository
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Build launcher
+        run: ./mvnw -pl com.neozpir.jdl -am package -U
+
+      - name: Bundle runtime
+        run: |
+          test -f com.neozpir.jdl/build/java-debug/server-launcher.jar
+          ls com.neozpir.jdl/build/java-debug/com.microsoft.java.debug.core-*.jar
+          cd com.neozpir.jdl/build/java-debug
+          zip -r "$GITHUB_WORKSPACE/java-debug-standalone.zip" .
+          unzip -l "$GITHUB_WORKSPACE/java-debug-standalone.zip"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            "$GITHUB_WORKSPACE/java-debug-standalone.zip" \
+            --title "java-debug standalone ${GITHUB_REF_NAME}" \
+            --generate-notes \
+          || gh release upload "${GITHUB_REF_NAME}" \
+            "$GITHUB_WORKSPACE/java-debug-standalone.zip" --clobber
