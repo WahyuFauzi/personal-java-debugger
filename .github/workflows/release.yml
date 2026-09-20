@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - '[0-9]*'
 
 permissions:
   contents: write
@@ -36,19 +36,28 @@ jobs:
 
       - name: Bundle runtime
         run: |
-          test -f com.neozpir.jdl/build/java-debug/server-launcher.jar
-          ls com.neozpir.jdl/build/java-debug/com.microsoft.java.debug.core-*.jar
-          cd com.neozpir.jdl/build/java-debug
-          zip -r "$GITHUB_WORKSPACE/java-debug-standalone.zip" .
+          set -euo pipefail
+          DIST=com.neozpir.jdl/build/java-debug
+          test -f "$DIST/server-launcher.jar"
+          ls "$DIST"/com.microsoft.java.debug.core-*.jar
+          cd "$DIST"
+          zip -r "$GITHUB_WORKSPACE/java-debug-standalone.zip" \
+            server-launcher.jar \
+            com.microsoft.java.debug.core-*.jar \
+            lib
           unzip -l "$GITHUB_WORKSPACE/java-debug-standalone.zip"
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" \
-            "$GITHUB_WORKSPACE/java-debug-standalone.zip" \
-            --title "java-debug standalone ${GITHUB_REF_NAME}" \
-            --generate-notes \
-          || gh release upload "${GITHUB_REF_NAME}" \
-            "$GITHUB_WORKSPACE/java-debug-standalone.zip" --clobber
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          asset="$GITHUB_WORKSPACE/java-debug-standalone.zip"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" "$asset" --clobber
+          else
+            gh release create "$tag" "$asset" \
+              --title "java-debug standalone $tag" \
+              --generate-notes
+          fi
